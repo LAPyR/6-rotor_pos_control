@@ -60,7 +60,7 @@ matrix::Vector3f AttitudeControl::update(const Quatf &q, const float ro, const f
        Eulerf yawa = qd;
        //qd = Quatf(cosf(yawa.psi()/2.f), 0.f, 0.f, sinf(yawa.psi()/2.f));
 
-       Quatf qd1(Eulerf(0.f, 0.f, yawa.psi()));
+       Quatf qd1(Eulerf(ro, pi, yawa.psi()));
 
        qd = qd1;
 
