@@ -238,7 +238,7 @@ MulticopterRateControl::Run()
 				_rate_control.setSaturationStatus(saturation_positive, saturation_negative);
 			}
 
-            //-------------------- control geometrico ----------------------------------------
+      //-------------------- control geometrico ----------------------------------------
 
                         vehicle_attitude_s v_att;
                         Vector3f att_control{0.f,0.f,0.f};
@@ -248,7 +248,7 @@ MulticopterRateControl::Run()
                             a_yaw = Eulerf(q).psi();
 
                             // get attitude setpoint rotational matrix
-                            Dcmf rot_des = Eulerf(0, 0, a_yaw);
+                            Dcmf rot_des = Eulerf(0.f, 0.f, a_yaw);
 
                             // get current rotation matrix from control state quaternions
                             Quatf q_att(v_att.q);
@@ -268,26 +268,41 @@ MulticopterRateControl::Run()
                             e_R_vec(2) = e_R(1, 0);  // Yaw
 
                             Vector3f omega{angular_velocity.xyz};
-                            omega(0) -= _rates_sp(0);
-                            omega(1) -= _rates_sp(1);
-                            omega(2) -= _rates_sp(2);
+                            Vector3f e_omega;
+                            e_omega(0) = omega(0);// - _rates_sp(0);
+                            e_omega(1) = omega(1);// - _rates_sp(1);
+                            e_omega(2) = omega(2);// - _rates_sp(2);
 
-                            k_p(0) = _param_mc_rollrate_k.get();
-                            k_p(1) = _param_mc_pitchrate_k.get();
+                            k_p(1) = _param_mc_rollrate_k.get();
+                            k_p(0) = _param_mc_pitchrate_k.get();
                             k_p(2) = _param_mc_yawrate_k.get();
-                            k_d(0) = _param_mc_rollrate_p.get();
-                            k_d(1) = _param_mc_pitchrate_p.get();
+                            k_d(1) = _param_mc_rollrate_p.get();
+                            k_d(0) = _param_mc_pitchrate_p.get();
                             k_d(2) = _param_mc_yawrate_p.get();
 
                             // < P-Control
                             torques(0) = - e_R_vec(0) * k_p(0);	// Roll
-                            torques(1) = - e_R_vec(1) * k_p(0);	// Pitch
-                            torques(2) = - e_R_vec(2) * k_p(0);		// Yaw
+                            torques(1) = - e_R_vec(1) * k_p(1);	// Pitch
+                            torques(2) = - e_R_vec(2) * k_p(2);		// Yaw
 
                             // PD-Control
-                            torques(0) = torques(0) - omega(0) * k_d(0);  // Roll
-                            torques(1) = torques(1) - omega(1) * k_d(0); // Pitch
-                            torques(2) = torques(2) - omega(2) * k_d(0);   // Yaw
+                            torques(0) = torques(0) - e_omega(0) * k_d(0);  // Roll
+                            torques(1) = torques(1) - e_omega(1) * k_d(1); // Pitch
+                            torques(2) = torques(2) - e_omega(2) * k_d(2);   // Yaw
+
+                            Vector3f v_R;
+                            Vector3f v_omega;
+                            v_R(0) = sqrtf(fabs(e_R_vec(0)))*(e_R_vec(0)/fabs(e_R_vec(0)));
+                            v_R(1) = sqrtf(fabs(e_R_vec(1)))*(e_R_vec(1)/fabs(e_R_vec(1)));
+                            v_R(2) = sqrtf(fabs(e_R_vec(2)))*(e_R_vec(2)/fabs(e_R_vec(2)));
+
+                            v_omega(0) = sqrtf(fabs(e_omega(0)))*(e_omega(0)/fabs(e_omega(0)));
+                            v_omega(1) = sqrtf(fabs(e_omega(1)))*(e_omega(1)/fabs(e_omega(1)));
+                            v_omega(2) = sqrtf(fabs(e_omega(2)))*(e_omega(2)/fabs(e_omega(2)));
+
+                            torques(0) = torques(0) - v_R(0) * k3(0) - v_omega(0) * k4(0);  // Roll
+                            torques(1) = torques(1) - v_R(1) * k3(1) - v_omega(1) * k4(1); // Pitch
+                            torques(2) = torques(2) - v_R(2) * k3(2) - v_omega(2) * k4(2);   // Yaw
 
                             att_control(0) = torques(0);
                             att_control(1) = torques(1);
