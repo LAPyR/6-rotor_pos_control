@@ -52,7 +52,7 @@ void AttitudeControl::setProportionalGain(const matrix::Vector3f &proportional_g
 	}
 }
 
-matrix::Vector3f AttitudeControl::update(const Quatf &q, const float ro, const float pi) const
+matrix::Vector3f AttitudeControl::update(const Quatf &q, float rol, float pit) const
 {
 	Quatf qd = _attitude_setpoint_q;
 
@@ -60,7 +60,7 @@ matrix::Vector3f AttitudeControl::update(const Quatf &q, const float ro, const f
        Eulerf yawa = qd;
        //qd = Quatf(cosf(yawa.psi()/2.f), 0.f, 0.f, sinf(yawa.psi()/2.f));
 
-       Quatf qd1(Eulerf(ro, pi, yawa.psi()));
+       Quatf qd1(Eulerf(rol, pit, yawa.psi()));
 
        qd = qd1;
 
