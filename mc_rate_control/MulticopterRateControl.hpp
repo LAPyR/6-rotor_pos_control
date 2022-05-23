@@ -202,6 +202,8 @@ private:
     float a_yaw = 0.f;
     matrix::Vector3f k_p{0.f,0.f,0.f};
     matrix::Vector3f k_d{0.f,0.f,0.f};
+    matrix::Vector3f k3{0.5f,0.f,0.f};
+    matrix::Vector3f k4{0.0f,0.f,0.f};
     //matrix::Vector3f att_control{0.f,0.f,0.f};
 
     uORB::Subscription _vehicle_attitude_setpoint_sub{ORB_ID(vehicle_attitude_setpoint)};
